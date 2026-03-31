@@ -19,8 +19,8 @@ const reservations = require("./routes/Reservations");
 const reports = require("./routes/Reports");
 
 app.use(cors({
-    origin: "http://localhost:5173", // Vite dev server
-    credentials: true,              // Allow cookies
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
 }));
 
 app.use(express.json());
@@ -34,8 +34,11 @@ app.use("/api/v1", theater);
 app.use("/api/v1", reservations);
 app.use("/api/v1", reports);
 
-connectDB();
-
-app.listen(PORT, () => {
-    console.log(`server started at port ${PORT}`);
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`server started at port ${PORT}`);
+    });
+}).catch((error) => {
+    console.error("Failed to connect to database:", error);
+    process.exit(1);
 });
