@@ -76,7 +76,7 @@ exports.getMovieById = async (req, res) => {
 exports.createMovie = async (req, res) => {
     try {
         const { title, desc, duration_min, genre_id } = req.body || {};
-        const file = req.files && req.files[0]; // multer upload
+        const file = req.file || (req.files && req.files[0]); // multer upload
 
         // 1. Validate required fields
         if (!title || !desc || !duration_min || !genre_id || !file) {
@@ -104,15 +104,37 @@ exports.createMovie = async (req, res) => {
             });
         }
 
-        // 4. Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(file.path, {
-            folder: "movie_posters",
-        });
+        // 4. Upload to Cloudinary (handles both disk and memory storage)
+        let uploadPromise;
+        if (file.path) {
+            // Disk storage (local development)
+            uploadPromise = cloudinary.uploader.upload(file.path, {
+                folder: "movie_posters",
+            });
+        } else if (file.buffer) {
+            // Memory storage (Vercel production)
+            uploadPromise = new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    { folder: "movie_posters" },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                uploadStream.end(file.buffer);
+            });
+        } else {
+            throw new Error('No file buffer or path available');
+        }
 
-        // 5. Delete temp file after upload
-        fs.unlink(file.path, (err) => {
-            if (err) console.log('Temp file cleanup failed:', err);
-        });
+        const result = await uploadPromise;
+
+        // 5. Delete temp file after upload (only for disk storage)
+        if (file.path) {
+            fs.unlink(file.path, (err) => {
+                if (err) console.log('Temp file cleanup failed:', err);
+            });
+        }
 
         // 6. Create movie
         const newMovie = await Movie.create({

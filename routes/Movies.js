@@ -1,25 +1,13 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
 const multer = require("multer");
 const routes = express.Router();
 
 const { createMovie, getMovieById, getMovies, deleteMovie, updateMovie } = require("../controllers/Movies");
 const { auth, isAdmin } = require("../middlewares/auth");
 
-const uploadsDir = path.join(__dirname, "../tmp/uploads");
-if (!fs.existsSync(uploadsDir)) {
-	fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-	destination: (_, __, cb) => cb(null, uploadsDir),
-	filename: (_, file, cb) => {
-		const ext = path.extname(file.originalname || "");
-		const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-		cb(null, `poster-${uniqueSuffix}${ext}`);
-	},
-});
+// Use memory storage for Vercel compatibility
+// Files are processed in memory and uploaded directly to Cloudinary
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage });
 const uploadAny = upload.any();
