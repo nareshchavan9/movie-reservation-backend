@@ -35,18 +35,18 @@ app.use("/api/v1", reservations);
 app.use("/api/v1", reports);
 
 // Initialize database connection
-connectDB().then(() => {
-    console.log("Database connected successfully");
-}).catch((error) => {
+connectDB().catch((error) => {
     console.error("Failed to connect to database:", error);
+    // App still runs even if DB connection fails initially
+    // Mongoose will retry connection from connection pool
 });
 
-// For local development
+// For local development only
 if (process.env.NODE_ENV !== "production") {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         console.log(`server started at port ${PORT}`);
     });
 }
 
-// Export app for Vercel serverless functions
+// Export app for Vercel serverless
 module.exports = app;
