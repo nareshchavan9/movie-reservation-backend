@@ -34,11 +34,19 @@ app.use("/api/v1", theater);
 app.use("/api/v1", reservations);
 app.use("/api/v1", reports);
 
+// Initialize database connection
 connectDB().then(() => {
+    console.log("Database connected successfully");
+}).catch((error) => {
+    console.error("Failed to connect to database:", error);
+});
+
+// For local development
+if (process.env.NODE_ENV !== "production") {
     app.listen(PORT, () => {
         console.log(`server started at port ${PORT}`);
     });
-}).catch((error) => {
-    console.error("Failed to connect to database:", error);
-    process.exit(1);
-});
+}
+
+// Export app for Vercel serverless functions
+module.exports = app;
