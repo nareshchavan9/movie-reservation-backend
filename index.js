@@ -19,7 +19,7 @@ const reservations = require("./routes/Reservations");
 const reports = require("./routes/Reports");
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "https://movie-reservation-frontend-peach.vercel.app/",
     credentials: true,
 }));
 
